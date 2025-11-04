@@ -8,7 +8,7 @@ export class CreateArticleDto {
   description?: string;
 
   @ApiProperty()
-  body: string;
+  content: string;
 
   @ApiProperty({ required: false, default: false })
   published?: boolean = false;

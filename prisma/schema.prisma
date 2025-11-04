@@ -16,9 +16,9 @@ datasource db {
 
 model Article {
   id          Int      @id @default(autoincrement())
-  title       String   @unique
+  title       String
   description String?
-  body        String
+  content     Json?
   published   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

@@ -14,7 +14,7 @@ export class ArticleEntity implements Article {
   description: string | null;
 
   @ApiProperty()
-  body: string;
+  content: string;
 
   @ApiProperty()
   published: boolean;
