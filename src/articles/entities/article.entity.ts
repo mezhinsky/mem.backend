@@ -10,6 +10,9 @@ export class ArticleEntity implements Article {
   @ApiProperty()
   title: string;
 
+  @ApiProperty()
+  slug: string;
+
   @ApiProperty({ required: false, nullable: true })
   description: string | null;
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -30,7 +30,19 @@ export class ArticlesService {
     });
   }
 
-  remove(id: number) {
-    return this.prisma.article.delete({ where: { id } });
+  async remove(id: number) {
+    // ✅ Проверяем, существует ли запись
+    const existing = await this.prisma.article.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException(`Статья с id=${id} не найдена`);
+    }
+
+    // ✅ Удаляем
+    return this.prisma.article.delete({
+      where: { id },
+    });
   }
 }
