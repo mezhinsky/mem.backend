@@ -19,11 +19,25 @@ export class ArticlesService {
     return this.prisma.article.findMany({ where: { published: true } });
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
+    const existing = await this.prisma.article.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Статья с id=${id} не найдена`);
+    }
+
     return this.prisma.article.findUnique({ where: { id } });
   }
 
-  update(id: number, updateArticleDto: UpdateArticleDto) {
+  async update(id: number, updateArticleDto: UpdateArticleDto) {
+    const existing = await this.prisma.article.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Статья с id=${id} не найдена`);
+    }
+
     return this.prisma.article.update({
       where: { id },
       data: updateArticleDto,
@@ -31,16 +45,12 @@ export class ArticlesService {
   }
 
   async remove(id: number) {
-    // ✅ Проверяем, существует ли запись
     const existing = await this.prisma.article.findUnique({
       where: { id },
     });
-
     if (!existing) {
       throw new NotFoundException(`Статья с id=${id} не найдена`);
     }
-
-    // ✅ Удаляем
     return this.prisma.article.delete({
       where: { id },
     });
