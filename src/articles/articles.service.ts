@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { QueryArticlesDto } from './dto/query-articles.dto';
 
 @Injectable()
 export class ArticlesService {
@@ -15,8 +16,60 @@ export class ArticlesService {
     return this.prisma.article.findMany({ where: { published: false } });
   }
 
-  findAll() {
-    return this.prisma.article.findMany({ where: { published: true } });
+  async findAll(query: QueryArticlesDto) {
+    const { page, limit, sortBy, order, search, cursorId } = query;
+
+    const where: any = {
+      published: true,
+    };
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const orderBy = {
+      [sortBy ?? 'createdAt']: order ?? 'desc',
+    } as Record<string, 'asc' | 'desc'>;
+
+    // ⚡ Универсальная пагинация
+    const take = limit;
+    let skip: number | undefined;
+    let cursor: any;
+
+    if (cursorId) {
+      // Cursor-based pagination
+      cursor = { id: cursorId };
+      skip = 1; // пропустить сам курсор
+    } else {
+      // Offset-based pagination
+      skip = (page - 1) * limit;
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.article.findMany({
+        where,
+        orderBy,
+        take,
+        skip,
+        ...(cursor ? { cursor } : {}),
+      }),
+      this.prisma.article.count({ where }),
+    ]);
+
+    const lastItem = items[items.length - 1];
+    const nextCursor = lastItem ? lastItem.id : null;
+
+    return {
+      items,
+      total,
+      limit,
+      page: cursorId ? undefined : page,
+      totalPages: cursorId ? undefined : Math.ceil(total / limit),
+      nextCursor, // 👈 для "Load more" в React
+    };
   }
 
   async findOne(id: number) {

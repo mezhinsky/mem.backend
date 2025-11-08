@@ -8,10 +8,12 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { QueryArticlesDto } from './dto/query-articles.dto';
 
 @Controller('articles')
 @ApiTags('articles')
@@ -32,8 +34,8 @@ export class ArticlesController {
 
   @Get()
   @ApiOkResponse({ type: ArticleEntity, isArray: true })
-  findAll() {
-    return this.articlesService.findAll();
+  findAll(@Query() query: QueryArticlesDto) {
+    return this.articlesService.findAll(query);
   }
 
   @Get(':id')

@@ -14,7 +14,8 @@ async function main() {
         title: faker.lorem.sentence(),
         content: faker.lorem.paragraphs({ min: 3, max: 7 }),
         slug: faker.lorem.slug(),
-        published: faker.datatype.boolean(),
+        // published: faker.datatype.boolean(),
+        published: true,
       },
     });
   }
