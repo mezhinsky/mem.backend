@@ -38,6 +38,12 @@ export class ArticlesController {
     return this.articlesService.findAll(query);
   }
 
+  @Get('by-slug/:slug')
+  @ApiOkResponse({ type: ArticleEntity })
+  findOneBySlug(@Param('slug') slug: string) {
+    return this.articlesService.findOneBySlug(slug);
+  }
+
   @Get(':id')
   @ApiOkResponse({ type: ArticleEntity })
   findOne(@Param('id') id: string) {

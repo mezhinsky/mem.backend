@@ -83,6 +83,17 @@ export class ArticlesService {
     return this.prisma.article.findUnique({ where: { id } });
   }
 
+  async findOneBySlug(slug: string) {
+    const existing = await this.prisma.article.findUnique({
+      where: { slug },
+    });
+    if (!existing) {
+      throw new NotFoundException(`Статья со slug="${slug}" не найдена`);
+    }
+
+    return existing;
+  }
+
   async update(id: number, updateArticleDto: UpdateArticleDto) {
     const existing = await this.prisma.article.findUnique({
       where: { id },

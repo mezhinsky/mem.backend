@@ -15,6 +15,11 @@ export class CreateArticleDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
+  slug?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
   description?: string;
 
   @ApiProperty()
