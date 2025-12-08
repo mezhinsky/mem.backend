@@ -1,24 +1,30 @@
-# Use Node.js 20.11.1 base image
-FROM node:20.11.1-alpine
+# Dockerfile
+FROM node:22-alpine
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# 1. Ставим зависимости (и prod, и dev — так проще для начала)
 COPY package*.json ./
+RUN npm ci
 
-# Install dependencies
-RUN npm cache clean --force
-RUN npm install --legacy-peer-deps
+# 2. Кладём Prisma схему и конфиг (важно — до generate)
+COPY prisma ./prisma
+COPY prisma.config.ts ./prisma.config.ts
 
-# Copy the rest of the application code
-COPY . .
+# 3. Фейковый DATABASE_URL только для этапа сборки
+ARG DATABASE_URL="postgres://user:password@localhost:5432/dummy"
+ENV DATABASE_URL=$DATABASE_URL
 
-# Generate Prisma Client code
+# 4. Генерим Prisma Client
 RUN npx prisma generate
 
-# Expose the port the app runs on, here, I was using port 3333
+# 5. Теперь весь остальной код (Nest, src и т.д.)
+COPY . .
+
+# 6. Сборка Nest
+RUN npm run build
+
 EXPOSE 3000
 
-# Command to run the app
-CMD [  "npm", "run", "start:migrate:prod" ]
+# На рантайме настоящий DATABASE_URL придёт из docker-compose / env
+CMD ["npm", "run", "start:migrate:prod"]
