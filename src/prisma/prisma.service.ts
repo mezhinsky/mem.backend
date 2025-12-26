@@ -1,7 +1,8 @@
 // src/prisma/prisma.service.ts
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '../../generated/prisma/client'; // путь под себя
+import { PrismaClient } from '../../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
 @Injectable()
 export class PrismaService
@@ -15,15 +16,14 @@ export class PrismaService
       throw new Error('DATABASE_URL is not set');
     }
 
-    // На время дебага можно оставить
-    console.log(
-      'Prisma connectionString =',
+    const pool = new Pool({
       connectionString,
-      'type:',
-      typeof connectionString,
-    );
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    });
 
-    const adapter = new PrismaPg({ connectionString });
+    const adapter = new PrismaPg(pool);
 
     super({ adapter });
   }
