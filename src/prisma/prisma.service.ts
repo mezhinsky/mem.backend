@@ -14,9 +14,9 @@ export class PrismaService
 
     const adapter = new PrismaPg({
       connectionString,
-      ssl: {
-        rejectUnauthorized: false, // <- ключевое
-      },
+      // ssl: {
+      //   rejectUnauthorized: false, // <- ключевое
+      // },
     });
 
     super({ adapter });
