@@ -5,12 +5,17 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  IsNumber,
 } from 'class-validator';
 
 export class CreateArticleDto {
   @ApiProperty()
   @IsString()
   title: string;
+
+  @ApiProperty()
+  @IsNumber()
+  weight: number;
 
   @ApiProperty({ required: false })
   @IsOptional()

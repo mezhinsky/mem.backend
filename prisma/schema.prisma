@@ -15,6 +15,7 @@ datasource db {
 
 model Article {
   id          Int      @id @default(autoincrement())
+  weight      Int @default(1)
   slug        String?   @unique
   title       String
   description String?

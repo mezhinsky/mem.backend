@@ -8,6 +8,9 @@ export class ArticleEntity implements Article {
   id: number;
 
   @ApiProperty()
+  weight: number;
+
+  @ApiProperty()
   title: string;
 
   @ApiProperty()
