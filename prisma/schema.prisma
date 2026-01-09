@@ -24,3 +24,21 @@ model Article {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Asset {
+  id           String    @id @default(uuid())
+  type         AssetType @default(IMAGE)
+  bucket       String
+  key          String    @unique
+  url          String
+  originalName String
+  mimeType     String
+  size         Int
+  metadata     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+enum AssetType {
+  IMAGE
+}

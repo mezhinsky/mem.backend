@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { ArticlesModule } from './articles/articles.module';
 import { UploadModule } from './upload/upload.module';
+import { AssetsModule } from './assets/assets.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UploadModule } from './upload/upload.module';
     PrismaModule,
     ArticlesModule,
     UploadModule,
+    AssetsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
