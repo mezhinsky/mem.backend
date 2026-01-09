@@ -41,4 +41,5 @@ model Asset {
 
 enum AssetType {
   IMAGE
+  FILE
 }

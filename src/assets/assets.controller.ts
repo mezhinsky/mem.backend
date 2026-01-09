@@ -17,6 +17,16 @@ import { AssetEntity } from './entities/asset.entity';
 export class AssetsController {
   constructor(private readonly assetsService: AssetsService) {}
 
+  @Post()
+  @ApiCreatedResponse({ type: AssetEntity })
+  @UseInterceptors(FileInterceptor('file'))
+  async create(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('Файл не передан');
+    }
+    return this.assetsService.create(file);
+  }
+
   @Post('images')
   @ApiCreatedResponse({ type: AssetEntity })
   @UseInterceptors(FileInterceptor('file'))
@@ -33,4 +43,3 @@ export class AssetsController {
     return this.assetsService.findOne(id);
   }
 }
-

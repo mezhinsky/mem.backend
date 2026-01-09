@@ -15,6 +15,41 @@ export class AssetsService {
     private uploadService: UploadService,
   ) {}
 
+  async create(file: Express.Multer.File) {
+    if (file.mimetype?.startsWith('image/')) {
+      return this.createImage(file);
+    }
+    return this.createFile(file);
+  }
+
+  async createFile(file: Express.Multer.File) {
+    const assetId = randomUUID();
+    const prefix = `assets/files/${assetId}`;
+    const ext = file.originalname.split('.').pop() || 'bin';
+    const originalKey = `${prefix}/original.${ext}`;
+
+    await this.uploadService.putPublicObject({
+      key: originalKey,
+      body: file.buffer,
+      contentType: file.mimetype || 'application/octet-stream',
+    });
+
+    const url = this.uploadService.getPublicUrlForKey(originalKey);
+
+    return this.prisma.asset.create({
+      data: {
+        id: assetId,
+        type: 'FILE',
+        bucket: process.env.S3_BUCKET!,
+        key: originalKey,
+        url,
+        originalName: file.originalname,
+        mimeType: file.mimetype || 'application/octet-stream',
+        size: file.size,
+      },
+    });
+  }
+
   async createImage(file: Express.Multer.File) {
     if (!file.mimetype?.startsWith('image/')) {
       throw new BadRequestException('Можно загружать только изображения');
