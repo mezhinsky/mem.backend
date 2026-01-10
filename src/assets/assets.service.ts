@@ -7,6 +7,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UploadService } from 'src/upload/upload.service';
 import sharp from 'sharp';
 import { randomUUID } from 'crypto';
+import { QueryAssetsDto } from './dto/query-assets.dto';
+import { UpdateAssetDto } from './dto/update-asset.dto';
 
 @Injectable()
 export class AssetsService {
@@ -14,6 +16,14 @@ export class AssetsService {
     private prisma: PrismaService,
     private uploadService: UploadService,
   ) {}
+
+  private tryKeyFromUrl(url: string): string | null {
+    const baseUrl = process.env.S3_PUBLIC_BASE_URL;
+    if (!baseUrl) return null;
+    const prefix = `${baseUrl}/`;
+    if (!url.startsWith(prefix)) return null;
+    return url.slice(prefix.length);
+  }
 
   async create(file: Express.Multer.File) {
     if (file.mimetype?.startsWith('image/')) {
@@ -148,11 +158,109 @@ export class AssetsService {
     });
   }
 
+  async findAll(query: QueryAssetsDto) {
+    const { page, limit, sortBy, order, search, cursorId } = query;
+
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { originalName: { contains: search, mode: 'insensitive' } },
+        { key: { contains: search, mode: 'insensitive' } },
+        { mimeType: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const orderBy = {
+      [sortBy ?? 'createdAt']: order ?? 'desc',
+    } as Record<string, 'asc' | 'desc'>;
+
+    const take = limit;
+    let skip: number | undefined;
+    let cursor: any;
+
+    if (cursorId) {
+      cursor = { id: cursorId };
+      skip = 1;
+    } else {
+      skip = (page - 1) * limit;
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.asset.findMany({
+        where,
+        orderBy,
+        take,
+        skip,
+        ...(cursor ? { cursor } : {}),
+      }),
+      this.prisma.asset.count({ where }),
+    ]);
+
+    const lastItem = items[items.length - 1];
+    const nextCursor = lastItem ? lastItem.id : null;
+
+    return {
+      items,
+      total,
+      limit,
+      page: cursorId ? undefined : page,
+      totalPages: cursorId ? undefined : Math.ceil(total / limit),
+      nextCursor,
+    };
+  }
+
   async findOne(id: string) {
     const existing = await this.prisma.asset.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Asset с id=${id} не найден`);
     }
     return existing;
+  }
+
+  async update(id: string, dto: UpdateAssetDto) {
+    const existing = await this.prisma.asset.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException(`Asset с id=${id} не найден`);
+    }
+
+    const data: any = {};
+    if (dto.originalName !== undefined) data.originalName = dto.originalName;
+    if (dto.metadata !== undefined) data.metadata = dto.metadata;
+
+    return this.prisma.asset.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async remove(id: string) {
+    const existing = await this.prisma.asset.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException(`Asset с id=${id} не найден`);
+    }
+
+    const keysToDelete = new Set<string>();
+    keysToDelete.add(existing.key);
+
+    const variants = (existing as any).metadata?.variants;
+    if (variants && typeof variants === 'object') {
+      for (const value of Object.values(variants)) {
+        if (typeof value !== 'string') continue;
+        const key = this.tryKeyFromUrl(value);
+        if (key) keysToDelete.add(key);
+      }
+    }
+
+    const dir = existing.key.split('/').slice(0, -1).join('/');
+    if (existing.type === 'IMAGE' && dir) {
+      keysToDelete.add(`${dir}/thumb.webp`);
+      keysToDelete.add(`${dir}/md.webp`);
+      keysToDelete.add(`${dir}/lg.webp`);
+      keysToDelete.add(`${dir}/og.webp`);
+    }
+
+    await this.uploadService.deletePublicObjects([...keysToDelete]);
+
+    return this.prisma.asset.delete({ where: { id } });
   }
 }

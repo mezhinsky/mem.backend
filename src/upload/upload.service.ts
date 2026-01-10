@@ -1,6 +1,10 @@
 // src/upload/upload.service.ts
 import { Injectable } from '@nestjs/common';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { randomUUID } from 'crypto';
 
 export type UploadPublicFileResult = {
@@ -45,6 +49,22 @@ export class UploadService {
         ContentType: params.contentType,
         ACL: 'public-read',
       }),
+    );
+  }
+
+  async deletePublicObjects(keys: string[]): Promise<void> {
+    const uniqueKeys = [...new Set(keys)].filter(Boolean);
+    if (uniqueKeys.length === 0) return;
+
+    await Promise.all(
+      uniqueKeys.map((key) =>
+        this.s3.send(
+          new DeleteObjectCommand({
+            Bucket: this.bucket,
+            Key: key,
+          }),
+        ),
+      ),
     );
   }
 
