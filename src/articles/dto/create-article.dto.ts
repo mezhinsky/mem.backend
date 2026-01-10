@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsBoolean,
-  IsJSON,
   IsObject,
   IsOptional,
   IsString,
@@ -30,6 +29,16 @@ export class CreateArticleDto {
   @ApiProperty()
   @IsObject()
   content: string;
+
+  @ApiProperty({ required: false, description: 'Asset.id for article thumbnail' })
+  @IsOptional()
+  @IsString()
+  thumbnailAssetId?: string;
+
+  @ApiProperty({ required: false, description: 'Asset.id for OpenGraph image' })
+  @IsOptional()
+  @IsString()
+  ogImageAssetId?: string;
 
   @ApiProperty({ required: false, default: false })
   @IsBoolean()

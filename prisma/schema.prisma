@@ -14,15 +14,19 @@ datasource db {
 }
 
 model Article {
-  id          Int      @id @default(autoincrement())
-  weight      Int @default(1)
-  slug        String?   @unique
-  title       String
-  description String?
-  content     Json?
-  published   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  weight           Int      @default(1)
+  slug             String?  @unique
+  title            String
+  description      String?
+  content          Json?
+  thumbnailAssetId String?
+  thumbnailAsset   Asset?   @relation("ArticleThumbnail", fields: [thumbnailAssetId], references: [id], onDelete: SetNull)
+  ogImageAssetId   String?
+  ogImageAsset     Asset?   @relation("ArticleOgImage", fields: [ogImageAssetId], references: [id], onDelete: SetNull)
+  published        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Asset {
@@ -37,6 +41,9 @@ model Asset {
   metadata     Json?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  thumbnailForArticles Article[] @relation("ArticleThumbnail")
+  ogImageForArticles   Article[] @relation("ArticleOgImage")
 }
 
 enum AssetType {

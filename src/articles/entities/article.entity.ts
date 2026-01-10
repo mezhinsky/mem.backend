@@ -13,14 +13,20 @@ export class ArticleEntity implements Article {
   @ApiProperty()
   title: string;
 
-  @ApiProperty()
-  slug: string;
+  @ApiProperty({ required: false, nullable: true })
+  slug: string | null;
 
   @ApiProperty({ required: false, nullable: true })
   description: string | null;
 
   @ApiProperty()
-  content: string;
+  content: any;
+
+  @ApiProperty({ required: false, nullable: true })
+  thumbnailAssetId: string | null;
+
+  @ApiProperty({ required: false, nullable: true })
+  ogImageAssetId: string | null;
 
   @ApiProperty()
   published: boolean;
