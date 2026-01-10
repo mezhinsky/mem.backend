@@ -8,12 +8,39 @@ import { QueryArticlesDto } from './dto/query-articles.dto';
 export class ArticlesService {
   constructor(private prisma: PrismaService) {}
 
+  private readonly articleInclude = {
+    thumbnailAsset: {
+      select: {
+        id: true,
+        url: true,
+        originalName: true,
+        mimeType: true,
+        metadata: true,
+      },
+    },
+    ogImageAsset: {
+      select: {
+        id: true,
+        url: true,
+        originalName: true,
+        mimeType: true,
+        metadata: true,
+      },
+    },
+  } as const;
+
   create(createArticleDto: CreateArticleDto) {
-    return this.prisma.article.create({ data: createArticleDto });
+    return this.prisma.article.create({
+      data: createArticleDto,
+      include: this.articleInclude,
+    });
   }
 
   findDrafts() {
-    return this.prisma.article.findMany({ where: { published: false } });
+    return this.prisma.article.findMany({
+      where: { published: false },
+      include: this.articleInclude,
+    });
   }
 
   async findAll(query: QueryArticlesDto) {
@@ -55,6 +82,7 @@ export class ArticlesService {
         take,
         skip,
         ...(cursor ? { cursor } : {}),
+        include: this.articleInclude,
       }),
       this.prisma.article.count({ where }),
     ]);
@@ -75,17 +103,19 @@ export class ArticlesService {
   async findOne(id: number) {
     const existing = await this.prisma.article.findUnique({
       where: { id },
+      include: this.articleInclude,
     });
     if (!existing) {
       throw new NotFoundException(`Статья с id=${id} не найдена`);
     }
 
-    return this.prisma.article.findUnique({ where: { id } });
+    return existing;
   }
 
   async findOneBySlug(slug: string) {
     const existing = await this.prisma.article.findUnique({
       where: { slug },
+      include: this.articleInclude,
     });
     if (!existing) {
       throw new NotFoundException(`Статья со slug="${slug}" не найдена`);
@@ -97,6 +127,7 @@ export class ArticlesService {
   async update(id: number, updateArticleDto: UpdateArticleDto) {
     const existing = await this.prisma.article.findUnique({
       where: { id },
+      include: this.articleInclude,
     });
     if (!existing) {
       throw new NotFoundException(`Статья с id=${id} не найдена`);
@@ -105,6 +136,7 @@ export class ArticlesService {
     return this.prisma.article.update({
       where: { id },
       data: updateArticleDto,
+      include: this.articleInclude,
     });
   }
 
