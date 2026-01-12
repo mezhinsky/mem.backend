@@ -53,41 +53,60 @@ export class AuthController {
   /**
    * Google OAuth callback
    * Handles the callback from Google after user consent
+   * Redirects to frontend with tokens as URL parameters
    */
   @Get('google/callback')
   @ApiOperation({ summary: 'Google OAuth callback handler' })
   @ApiResponse({
-    status: 200,
-    description: 'Returns auth tokens and user info',
+    status: 302,
+    description: 'Redirects to frontend with auth tokens',
   })
   @ApiResponse({ status: 401, description: 'Invalid state or authorization code' })
   async googleCallback(
     @Query('code') code: string,
     @Query('state') state: string,
     @Query('error') error: string,
+    @Res() res: Response,
   ) {
+    const frontendOrigin = this.configService.getOrThrow<string>('FRONTEND_ORIGIN');
+    const callbackPath = '/auth/callback';
+
     // Handle OAuth errors from Google
     if (error) {
-      throw new BadRequestException(`Google OAuth error: ${error}`);
+      const errorUrl = new URL(callbackPath, frontendOrigin);
+      errorUrl.searchParams.set('error', error);
+      return res.redirect(errorUrl.toString());
     }
 
     if (!code || !state) {
-      throw new BadRequestException('Missing code or state parameter');
+      const errorUrl = new URL(callbackPath, frontendOrigin);
+      errorUrl.searchParams.set('error', 'missing_params');
+      return res.redirect(errorUrl.toString());
     }
 
-    const result = await this.authService.handleGoogleCallback(code, state);
+    try {
+      const result = await this.authService.handleGoogleCallback(code, state);
 
-    // Return JSON with tokens
-    // Frontend should:
-    // 1. Store accessToken in memory only
-    // 2. Call /auth/set-cookie with sessionId + refreshToken
-    // 3. Never store refreshToken after that
-    return {
-      accessToken: result.accessToken,
-      sessionId: result.sessionId,
-      refreshToken: result.refreshToken,
-      user: result.user,
-    };
+      // Redirect to frontend with tokens
+      // Frontend will:
+      // 1. Store accessToken in memory only
+      // 2. Call /auth/set-cookie with sessionId + refreshToken
+      // 3. Never store refreshToken after that
+      const successUrl = new URL(callbackPath, frontendOrigin);
+      successUrl.searchParams.set('accessToken', result.accessToken);
+      successUrl.searchParams.set('sessionId', result.sessionId);
+      successUrl.searchParams.set('refreshToken', result.refreshToken);
+      successUrl.searchParams.set('userId', result.user.id);
+      successUrl.searchParams.set('email', result.user.email || '');
+      successUrl.searchParams.set('name', result.user.name || '');
+      successUrl.searchParams.set('avatar', result.user.avatar || '');
+
+      return res.redirect(successUrl.toString());
+    } catch (err) {
+      const errorUrl = new URL(callbackPath, frontendOrigin);
+      errorUrl.searchParams.set('error', 'auth_failed');
+      return res.redirect(errorUrl.toString());
+    }
   }
 
   /**
