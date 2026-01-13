@@ -3,6 +3,7 @@ import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { QueryArticlesDto } from './dto/query-articles.dto';
+import type { Prisma } from '../../generated/prisma';
 
 @Injectable()
 export class ArticlesService {
@@ -43,12 +44,16 @@ export class ArticlesService {
     });
   }
 
-  async findAll(query: QueryArticlesDto) {
-    const { page, limit, sortBy, order, search, cursorId } = query;
+  private buildWhere(
+    query: QueryArticlesDto,
+    opts: { publishedOnly?: boolean } = {},
+  ): Prisma.ArticleWhereInput {
+    const { search } = query;
+    const where: Prisma.ArticleWhereInput = {};
 
-    const where: any = {
-      // published: true,
-    };
+    if (opts.publishedOnly) {
+      where.published = true;
+    }
 
     if (search) {
       where.OR = [
@@ -57,6 +62,14 @@ export class ArticlesService {
       ];
     }
 
+    return where;
+  }
+
+  async findAll(query: QueryArticlesDto) {
+    const { page, limit, sortBy, order, search, cursorId } = query;
+
+    const where = this.buildWhere(query);
+
     const orderBy = {
       [sortBy ?? 'createdAt']: order ?? 'desc',
     } as Record<string, 'asc' | 'desc'>;
@@ -64,7 +77,7 @@ export class ArticlesService {
     // ⚡ Универсальная пагинация
     const take = limit;
     let skip: number | undefined;
-    let cursor: any;
+    let cursor: Prisma.ArticleWhereUniqueInput | undefined;
 
     if (cursorId) {
       // Cursor-based pagination
@@ -100,6 +113,51 @@ export class ArticlesService {
     };
   }
 
+  async findAllPublic(query: QueryArticlesDto) {
+    const { page, limit, sortBy, order, cursorId } = query;
+
+    const where = this.buildWhere(query, { publishedOnly: true });
+
+    const orderBy = {
+      [sortBy ?? 'createdAt']: order ?? 'desc',
+    } as Record<string, 'asc' | 'desc'>;
+
+    const take = limit;
+    let skip: number | undefined;
+    let cursor: Prisma.ArticleWhereUniqueInput | undefined;
+
+    if (cursorId) {
+      cursor = { id: cursorId };
+      skip = 1;
+    } else {
+      skip = (page - 1) * limit;
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.article.findMany({
+        where,
+        orderBy,
+        take,
+        skip,
+        ...(cursor ? { cursor } : {}),
+        include: this.articleInclude,
+      }),
+      this.prisma.article.count({ where }),
+    ]);
+
+    const lastItem = items[items.length - 1];
+    const nextCursor = lastItem ? lastItem.id : null;
+
+    return {
+      items,
+      total,
+      limit,
+      page: cursorId ? undefined : page,
+      totalPages: cursorId ? undefined : Math.ceil(total / limit),
+      nextCursor,
+    };
+  }
+
   async findOne(id: number) {
     const existing = await this.prisma.article.findUnique({
       where: { id },
@@ -119,6 +177,27 @@ export class ArticlesService {
     });
     if (!existing) {
       throw new NotFoundException(`Статья со slug="${slug}" не найдена`);
+    }
+
+    return existing;
+  }
+
+  async findOnePublicBySlugOrId(slugOrId: string) {
+    const parsedId = Number(slugOrId);
+    const isNumericId =
+      Number.isInteger(parsedId) && String(parsedId) === slugOrId;
+
+    const existing = await this.prisma.article.findFirst({
+      where: isNumericId
+        ? { id: parsedId, published: true }
+        : { slug: slugOrId, published: true },
+      include: this.articleInclude,
+    });
+
+    if (!existing) {
+      throw new NotFoundException(
+        `Опубликованная статья "${slugOrId}" не найдена`,
+      );
     }
 
     return existing;
