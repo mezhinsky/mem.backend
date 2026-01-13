@@ -282,10 +282,15 @@ export class AuthController {
     refreshToken: string,
     csrfToken: string,
   ): void {
+    // In production we need cross-subdomain cookies (admin.<domain> <-> api.<domain>),
+    // which requires SameSite=None + Secure.
+    // In development, Secure=false is common (http://localhost), and many browsers reject
+    // SameSite=None without Secure, so we use Lax.
+    const sameSite: 'none' | 'lax' = this.isProduction ? 'none' : 'lax';
     const cookieOptions = {
       path: '/',
-      domain: this.cookieDomain,
-      sameSite: 'none' as const,
+      domain: this.isProduction ? this.cookieDomain : undefined,
+      sameSite,
       secure: this.isProduction,
       maxAge: TTL.REFRESH_TOKEN_SECONDS * 1000, // Convert to milliseconds
     };
@@ -307,10 +312,11 @@ export class AuthController {
    * Helper: Clear authentication cookies
    */
   private clearCookies(res: Response): void {
+    const sameSite: 'none' | 'lax' = this.isProduction ? 'none' : 'lax';
     const cookieOptions = {
       path: '/',
-      domain: this.cookieDomain,
-      sameSite: 'none' as const,
+      domain: this.isProduction ? this.cookieDomain : undefined,
+      sameSite,
       secure: this.isProduction,
     };
 
