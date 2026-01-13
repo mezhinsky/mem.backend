@@ -28,11 +28,35 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   // CORS configuration for cross-domain authentication
-  // FRONTEND_ORIGIN must be set in production (e.g., https://mem.app)
-  const frontendOrigin = process.env.FRONTEND_ORIGIN || 'http://localhost:3000';
+  // FRONTEND_ORIGIN can be a comma-separated list (e.g. "https://admin.app,https://frontend.app").
+  // In development, allow localhost dev servers by default.
+  const isProduction = process.env.NODE_ENV === 'production';
+  const frontendOriginEnv = process.env.FRONTEND_ORIGIN;
+  const allowedOrigins = (
+    frontendOriginEnv
+      ? frontendOriginEnv.split(',')
+      : isProduction
+        ? []
+        : ['http://localhost:5173', 'http://localhost:3001', 'http://localhost:3000']
+  )
+    .map((o) => o.trim())
+    .filter(Boolean);
 
   app.enableCors({
-    origin: frontendOrigin.split(',').map((o) => o.trim()),
+    origin: (origin, callback) => {
+      // allow non-browser requests (curl, server-to-server)
+      if (!origin) return callback(null, true);
+
+      // explicit allow-list
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      // dev convenience: allow any localhost port
+      if (!isProduction && origin.startsWith('http://localhost:')) {
+        return callback(null, true);
+      }
+
+      return callback(null, false);
+    },
     credentials: true, // Required for cookies
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
