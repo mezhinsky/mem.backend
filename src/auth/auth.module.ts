@@ -7,6 +7,7 @@ import { GoogleOAuthService } from './services/google-oauth.service';
 import { RedisSessionService } from './services/redis-session.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CsrfGuard } from './guards/csrf.guard';
+import { RolesGuard } from './guards/roles.guard';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
@@ -29,7 +30,8 @@ import { PrismaModule } from '../prisma/prisma.module';
     RedisSessionService,
     JwtAuthGuard,
     CsrfGuard,
+    RolesGuard,
   ],
-  exports: [AuthService, JwtAuthGuard, CsrfGuard],
+  exports: [AuthService, JwtAuthGuard, CsrfGuard, RolesGuard],
 })
 export class AuthModule {}

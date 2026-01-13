@@ -13,4 +13,3 @@ export class UpdateAssetDto {
   @IsOptional()
   metadata?: any;
 }
-

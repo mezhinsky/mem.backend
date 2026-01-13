@@ -14,7 +14,12 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './services/auth.service';
 import { RedisSessionService } from './services/redis-session.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -44,7 +49,10 @@ export class AuthController {
    */
   @Get('google')
   @ApiOperation({ summary: 'Initiate Google OAuth flow' })
-  @ApiResponse({ status: 302, description: 'Redirects to Google consent screen' })
+  @ApiResponse({
+    status: 302,
+    description: 'Redirects to Google consent screen',
+  })
   async googleAuth(@Res() res: Response) {
     const authUrl = await this.authService.initiateGoogleAuth();
     res.redirect(authUrl);
@@ -61,14 +69,18 @@ export class AuthController {
     status: 302,
     description: 'Redirects to frontend with auth tokens',
   })
-  @ApiResponse({ status: 401, description: 'Invalid state or authorization code' })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid state or authorization code',
+  })
   async googleCallback(
     @Query('code') code: string,
     @Query('state') state: string,
     @Query('error') error: string,
     @Res() res: Response,
   ) {
-    const frontendOrigin = this.configService.getOrThrow<string>('FRONTEND_ORIGIN');
+    const frontendOrigin =
+      this.configService.getOrThrow<string>('FRONTEND_ORIGIN');
     const callbackPath = '/auth/callback';
 
     // Handle OAuth errors from Google
@@ -158,10 +170,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Returns new access token' })
   @ApiResponse({ status: 401, description: 'Invalid refresh token' })
   @ApiResponse({ status: 403, description: 'CSRF validation failed' })
-  async refresh(
-    @Body() dto: RefreshDto,
-    @Req() req: Request,
-  ) {
+  async refresh(@Body() dto: RefreshDto, @Req() req: Request) {
     const refreshToken = req.cookies?.[COOKIE_NAMES.REFRESH_TOKEN];
 
     if (!refreshToken) {

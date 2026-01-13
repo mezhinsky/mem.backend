@@ -5,11 +5,13 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { GoogleOAuthService, GoogleUserInfo } from './google-oauth.service';
 import { RedisSessionService } from './redis-session.service';
 import { TTL } from '../auth.constants';
+import { Role } from '../../../generated/prisma';
 
 export interface JwtPayload {
   sub: string; // userId
   email?: string;
   name?: string;
+  role?: Role; // Added at guard level from database, not stored in token
 }
 
 export interface AuthTokens {

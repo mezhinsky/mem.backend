@@ -10,4 +10,3 @@ import { UploadModule } from 'src/upload/upload.module';
   imports: [PrismaModule, UploadModule],
 })
 export class AssetsModule {}
-

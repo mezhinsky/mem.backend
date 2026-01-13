@@ -30,7 +30,10 @@ export class CreateArticleDto {
   @IsObject()
   content: string;
 
-  @ApiProperty({ required: false, description: 'Asset.id for article thumbnail' })
+  @ApiProperty({
+    required: false,
+    description: 'Asset.id for article thumbnail',
+  })
   @IsOptional()
   @IsString()
   thumbnailAssetId?: string;

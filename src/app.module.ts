@@ -8,6 +8,7 @@ import { UploadModule } from './upload/upload.module';
 import { AssetsModule } from './assets/assets.module';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthModule } from './auth/auth.module';
     RedisModule,
     PrismaModule,
     AuthModule,
+    UsersModule,
     ArticlesModule,
     UploadModule,
     AssetsModule,

@@ -110,9 +110,7 @@ export class RedisSessionService {
   async deleteAllUserSessions(userId: string): Promise<number> {
     const pattern = REDIS_KEYS.userSessions(userId);
     const deleted = await this.redisService.delByPattern(pattern);
-    this.logger.debug(
-      `Deleted ${deleted} sessions for user ${userId}`,
-    );
+    this.logger.debug(`Deleted ${deleted} sessions for user ${userId}`);
     return deleted;
   }
 
