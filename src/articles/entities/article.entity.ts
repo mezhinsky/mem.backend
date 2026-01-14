@@ -2,6 +2,7 @@
 
 import { Article } from 'generated/prisma';
 import { ApiProperty } from '@nestjs/swagger';
+import { TagEntity } from '../../tags/entities/tag.entity';
 
 export class ArticleEntity implements Article {
   @ApiProperty()
@@ -36,4 +37,7 @@ export class ArticleEntity implements Article {
 
   @ApiProperty()
   updatedAt: Date;
+
+  @ApiProperty({ type: [TagEntity], required: false })
+  tags?: TagEntity[];
 }

@@ -9,6 +9,7 @@ import { AssetsModule } from './assets/assets.module';
 import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { TagsModule } from './tags/tags.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     UsersModule,
     ArticlesModule,
+    TagsModule,
     UploadModule,
     AssetsModule,
   ],

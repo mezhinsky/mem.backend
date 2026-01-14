@@ -5,6 +5,8 @@ import {
   IsOptional,
   IsString,
   IsNumber,
+  IsArray,
+  IsInt,
 } from 'class-validator';
 
 export class CreateArticleDto {
@@ -47,4 +49,14 @@ export class CreateArticleDto {
   @IsBoolean()
   @IsOptional()
   published?: boolean = false;
+
+  @ApiProperty({
+    required: false,
+    description: 'Array of Tag IDs to assign to the article',
+    type: [Number],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  tagIds?: number[];
 }

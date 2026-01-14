@@ -28,11 +28,21 @@ export class ArticlesService {
         metadata: true,
       },
     },
+    tags: true,
   } as const;
 
   create(createArticleDto: CreateArticleDto) {
+    const { tagIds, ...articleData } = createArticleDto;
+
     return this.prisma.article.create({
-      data: createArticleDto,
+      data: {
+        ...articleData,
+        ...(tagIds && {
+          tags: {
+            connect: tagIds.map((id) => ({ id })),
+          },
+        }),
+      },
       include: this.articleInclude,
     });
   }
@@ -212,9 +222,18 @@ export class ArticlesService {
       throw new NotFoundException(`Статья с id=${id} не найдена`);
     }
 
+    const { tagIds, ...articleData } = updateArticleDto;
+
     return this.prisma.article.update({
       where: { id },
-      data: updateArticleDto,
+      data: {
+        ...articleData,
+        ...(tagIds !== undefined && {
+          tags: {
+            set: tagIds.map((tagId) => ({ id: tagId })),
+          },
+        }),
+      },
       include: this.articleInclude,
     });
   }
