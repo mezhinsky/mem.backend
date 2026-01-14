@@ -32,6 +32,7 @@ import { COOKIE_NAMES, TTL } from './auth.constants';
 export class AuthController {
   private readonly cookieDomain: string | undefined;
   private readonly isProduction: boolean;
+  private readonly adminFrontendUrl: string;
 
   constructor(
     private authService: AuthService,
@@ -41,6 +42,11 @@ export class AuthController {
     this.cookieDomain = this.configService.get<string>('COOKIE_DOMAIN');
     this.isProduction =
       this.configService.get<string>('NODE_ENV') === 'production';
+
+    // FRONTEND_ORIGIN may contain comma-separated URLs (e.g., "http://localhost:5173,http://localhost:3001")
+    // Take the first URL as the admin frontend URL for OAuth redirects
+    const frontendOrigins = this.configService.getOrThrow<string>('FRONTEND_ORIGIN');
+    this.adminFrontendUrl = frontendOrigins.split(',')[0].trim();
   }
 
   /**
@@ -79,19 +85,17 @@ export class AuthController {
     @Query('error') error: string,
     @Res() res: Response,
   ) {
-    const frontendOrigin =
-      this.configService.getOrThrow<string>('FRONTEND_ORIGIN');
     const callbackPath = '/auth/callback';
 
     // Handle OAuth errors from Google
     if (error) {
-      const errorUrl = new URL(callbackPath, frontendOrigin);
+      const errorUrl = new URL(callbackPath, this.adminFrontendUrl);
       errorUrl.searchParams.set('error', error);
       return res.redirect(errorUrl.toString());
     }
 
     if (!code || !state) {
-      const errorUrl = new URL(callbackPath, frontendOrigin);
+      const errorUrl = new URL(callbackPath, this.adminFrontendUrl);
       errorUrl.searchParams.set('error', 'missing_params');
       return res.redirect(errorUrl.toString());
     }
@@ -104,7 +108,7 @@ export class AuthController {
       // 1. Store accessToken in memory only
       // 2. Call /auth/set-cookie with sessionId + refreshToken
       // 3. Never store refreshToken after that
-      const successUrl = new URL(callbackPath, frontendOrigin);
+      const successUrl = new URL(callbackPath, this.adminFrontendUrl);
       successUrl.searchParams.set('accessToken', result.accessToken);
       successUrl.searchParams.set('sessionId', result.sessionId);
       successUrl.searchParams.set('refreshToken', result.refreshToken);
@@ -115,7 +119,7 @@ export class AuthController {
 
       return res.redirect(successUrl.toString());
     } catch (err) {
-      const errorUrl = new URL(callbackPath, frontendOrigin);
+      const errorUrl = new URL(callbackPath, this.adminFrontendUrl);
       errorUrl.searchParams.set('error', 'auth_failed');
       return res.redirect(errorUrl.toString());
     }
