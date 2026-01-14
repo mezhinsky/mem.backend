@@ -16,7 +16,8 @@ export class TagsService {
   }
 
   async findAll(query: QueryTagsDto) {
-    const { search } = query;
+    const { page, limit, sortBy, order, search } = query;
+
     const where: Prisma.TagWhereInput = {};
 
     if (search) {
@@ -26,10 +27,29 @@ export class TagsService {
       ];
     }
 
-    return this.prisma.tag.findMany({
-      where,
-      orderBy: { name: 'asc' },
-    });
+    const orderBy = {
+      [sortBy ?? 'name']: order ?? 'asc',
+    } as Record<string, 'asc' | 'desc'>;
+
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prisma.tag.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+      }),
+      this.prisma.tag.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async findOne(id: number) {
