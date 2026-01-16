@@ -10,6 +10,7 @@ import { RedisModule } from './redis/redis.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TagsModule } from './tags/tags.module';
+import { InternalModule } from './internal/internal.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { TagsModule } from './tags/tags.module';
     TagsModule,
     UploadModule,
     AssetsModule,
+    InternalModule,
   ],
   controllers: [AppController],
   providers: [AppService],
