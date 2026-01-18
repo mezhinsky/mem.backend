@@ -4,10 +4,11 @@ import { ArticlesController } from './articles.controller';
 import { PublicArticlesController } from './public-articles.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
+import { TgPublisherModule } from '../tg-publisher/tg-publisher.module';
 
 @Module({
   controllers: [ArticlesController, PublicArticlesController],
   providers: [ArticlesService],
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, TgPublisherModule],
 })
 export class ArticlesModule {}

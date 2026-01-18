@@ -3,11 +3,15 @@ import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { QueryArticlesDto } from './dto/query-articles.dto';
+import { TgPublisherService } from '../tg-publisher/tg-publisher.service';
 import type { Prisma } from '../../generated/prisma';
 
 @Injectable()
 export class ArticlesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private tgPublisher: TgPublisherService,
+  ) {}
 
   private readonly articleInclude = {
     thumbnailAsset: {
@@ -210,7 +214,16 @@ export class ArticlesService {
       );
     }
 
-    return existing;
+    // Enrich with Telegram widget data if tgPostId exists
+    let tgWidget: { channel: string; messageId: number } | null = null;
+    if (existing.tgPostId) {
+      tgWidget = await this.tgPublisher.getWidgetData(existing.tgPostId);
+    }
+
+    return {
+      ...existing,
+      tgWidget,
+    };
   }
 
   async update(id: number, updateArticleDto: UpdateArticleDto) {
