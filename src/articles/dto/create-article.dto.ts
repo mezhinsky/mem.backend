@@ -34,6 +34,14 @@ export class CreateArticleDto {
 
   @ApiProperty({
     required: false,
+    description: 'Linked mez.tg.publisher post id (cuid)',
+  })
+  @IsOptional()
+  @IsString()
+  tgPostId?: string;
+
+  @ApiProperty({
+    required: false,
     description: 'Asset.id for article thumbnail',
   })
   @IsOptional()

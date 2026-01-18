@@ -24,6 +24,9 @@ export class ArticleEntity implements Article {
   content: any;
 
   @ApiProperty({ required: false, nullable: true })
+  tgPostId: string | null;
+
+  @ApiProperty({ required: false, nullable: true })
   thumbnailAssetId: string | null;
 
   @ApiProperty({ required: false, nullable: true })

@@ -20,6 +20,7 @@ model Article {
   title            String
   description      String?
   content          Json?
+  tgPostId         String?  @unique
   thumbnailAssetId String?
   thumbnailAsset   Asset?   @relation("ArticleThumbnail", fields: [thumbnailAssetId], references: [id], onDelete: SetNull)
   ogImageAssetId   String?
