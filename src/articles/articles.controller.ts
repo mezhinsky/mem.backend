@@ -21,9 +21,8 @@ import { ArticlesService } from './articles.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { QueryArticlesDto } from './dto/query-articles.dto';
-import { JwtAuthGuard, RolesGuard } from '../auth/guards';
-import { Roles } from '../auth/decorators';
-import { Role } from '../../generated/prisma';
+import { GatewayAuthGuard, RolesGuard } from '../common/guards';
+import { Roles } from '../common/decorators';
 
 @Controller('articles')
 @ApiTags('articles')
@@ -31,8 +30,8 @@ export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @UseGuards(GatewayAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: ArticleEntity })
   @ApiForbiddenResponse({ description: 'Access denied - Admin role required' })
@@ -41,8 +40,8 @@ export class ArticlesController {
   }
 
   @Get('drafts')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @UseGuards(GatewayAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOkResponse({ type: ArticleEntity, isArray: true })
   @ApiForbiddenResponse({ description: 'Access denied - Admin role required' })
@@ -51,7 +50,7 @@ export class ArticlesController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(GatewayAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ type: ArticleEntity, isArray: true })
   findAll(@Query() query: QueryArticlesDto) {
@@ -59,7 +58,7 @@ export class ArticlesController {
   }
 
   @Get('by-slug/:slug')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(GatewayAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ type: ArticleEntity })
   findOneBySlug(@Param('slug') slug: string) {
@@ -67,7 +66,7 @@ export class ArticlesController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(GatewayAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ type: ArticleEntity })
   findOne(@Param('id') id: string) {
@@ -75,8 +74,8 @@ export class ArticlesController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @UseGuards(GatewayAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOkResponse({ type: ArticleEntity })
   @ApiForbiddenResponse({ description: 'Access denied - Admin role required' })
@@ -85,8 +84,8 @@ export class ArticlesController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @UseGuards(GatewayAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOkResponse({ type: ArticleEntity })
   @ApiForbiddenResponse({ description: 'Access denied - Admin role required' })

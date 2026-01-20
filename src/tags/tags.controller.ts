@@ -22,9 +22,8 @@ import { UpdateTagDto } from './dto/update-tag.dto';
 import { QueryTagsDto } from './dto/query-tags.dto';
 import { TagEntity } from './entities/tag.entity';
 import { ArticleEntity } from '../articles/entities/article.entity';
-import { JwtAuthGuard, RolesGuard } from '../auth/guards';
-import { Roles } from '../auth/decorators';
-import { Role } from '../../generated/prisma';
+import { GatewayAuthGuard, RolesGuard } from '../common/guards';
+import { Roles } from '../common/decorators';
 
 @Controller('tags')
 @ApiTags('tags')
@@ -32,8 +31,8 @@ export class TagsController {
   constructor(private readonly tagsService: TagsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @UseGuards(GatewayAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: TagEntity })
   @ApiForbiddenResponse({ description: 'Access denied - Admin role required' })
@@ -60,8 +59,8 @@ export class TagsController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @UseGuards(GatewayAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOkResponse({ type: TagEntity })
   @ApiForbiddenResponse({ description: 'Access denied - Admin role required' })
@@ -70,8 +69,8 @@ export class TagsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @UseGuards(GatewayAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOkResponse({ type: TagEntity })
   @ApiForbiddenResponse({ description: 'Access denied - Admin role required' })
@@ -80,8 +79,8 @@ export class TagsController {
   }
 
   @Get('by-slug/:slug/articles')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN)
+  @UseGuards(GatewayAuthGuard, RolesGuard)
+  @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOkResponse({ type: ArticleEntity, isArray: true })
   @ApiForbiddenResponse({ description: 'Access denied - Admin role required' })
