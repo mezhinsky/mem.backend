@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Tag } from '../../../generated/prisma';
 
 export class TagEntity implements Tag {
@@ -10,6 +10,9 @@ export class TagEntity implements Tag {
 
   @ApiProperty()
   slug: string;
+
+  @ApiPropertyOptional({ description: 'Cover image asset ID' })
+  coverAssetId: string | null;
 
   @ApiProperty()
   createdAt: Date;

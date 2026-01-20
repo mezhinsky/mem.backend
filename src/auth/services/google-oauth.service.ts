@@ -87,7 +87,7 @@ export class GoogleOAuthService {
       scope: GOOGLE_OAUTH.SCOPES.join(' '),
       state: state,
       access_type: 'offline',
-      prompt: 'consent',
+      prompt: 'select_account', // Show account picker without forcing re-consent
     });
 
     return `${GOOGLE_OAUTH.AUTH_URL}?${params.toString()}`;

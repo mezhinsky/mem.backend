@@ -32,12 +32,14 @@ model Article {
 }
 
 model Tag {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  slug      String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  articles  Article[]
+  id           Int       @id @default(autoincrement())
+  name         String    @unique
+  slug         String    @unique
+  coverAssetId String?
+  coverAsset   Asset?    @relation("TagCover", fields: [coverAssetId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  articles     Article[]
 }
 
 model Asset {
@@ -55,6 +57,7 @@ model Asset {
 
   thumbnailForArticles Article[] @relation("ArticleThumbnail")
   ogImageForArticles   Article[] @relation("ArticleOgImage")
+  coverForTags         Tag[]     @relation("TagCover")
 }
 
 enum AssetType {

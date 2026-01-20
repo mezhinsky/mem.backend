@@ -9,9 +9,22 @@ import type { Prisma } from '../../generated/prisma';
 export class TagsService {
   constructor(private prisma: PrismaService) {}
 
+  private readonly tagInclude = {
+    coverAsset: {
+      select: {
+        id: true,
+        url: true,
+        originalName: true,
+        mimeType: true,
+        metadata: true,
+      },
+    },
+  } as const;
+
   create(createTagDto: CreateTagDto) {
     return this.prisma.tag.create({
       data: createTagDto,
+      include: this.tagInclude,
     });
   }
 
@@ -39,6 +52,7 @@ export class TagsService {
         orderBy,
         skip,
         take: limit,
+        include: this.tagInclude,
       }),
       this.prisma.tag.count({ where }),
     ]);
@@ -55,6 +69,7 @@ export class TagsService {
   async findOne(id: number) {
     const tag = await this.prisma.tag.findUnique({
       where: { id },
+      include: this.tagInclude,
     });
     if (!tag) {
       throw new NotFoundException(`Тег с id=${id} не найден`);
@@ -65,6 +80,7 @@ export class TagsService {
   async findOneBySlug(slug: string) {
     const tag = await this.prisma.tag.findUnique({
       where: { slug },
+      include: this.tagInclude,
     });
     if (!tag) {
       throw new NotFoundException(`Тег со slug="${slug}" не найден`);
@@ -83,6 +99,7 @@ export class TagsService {
     return this.prisma.tag.update({
       where: { id },
       data: updateTagDto,
+      include: this.tagInclude,
     });
   }
 

@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateTagDto {
   @ApiProperty({ description: 'Tag display name' })
@@ -11,4 +11,9 @@ export class CreateTagDto {
   @IsString()
   @IsNotEmpty()
   slug: string;
+
+  @ApiPropertyOptional({ description: 'Cover image asset ID' })
+  @IsString()
+  @IsOptional()
+  coverAssetId?: string;
 }
