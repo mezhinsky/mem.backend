@@ -44,4 +44,9 @@ export class QueryTagsDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiProperty({ required: false, description: 'Cursor ID for pagination' })
+  @IsOptional()
+  @Type(() => Number)
+  cursorId?: number;
 }

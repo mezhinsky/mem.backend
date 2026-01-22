@@ -84,13 +84,19 @@ export class TagsController {
   @ApiBearerAuth()
   @ApiOkResponse({ type: ArticleEntity, isArray: true })
   @ApiForbiddenResponse({ description: 'Access denied - Admin role required' })
-  findArticlesByTagSlug(@Param('slug') slug: string) {
-    return this.tagsService.findArticlesByTagSlug(slug, false);
+  findArticlesByTagSlug(
+    @Param('slug') slug: string,
+    @Query() query: QueryTagsDto,
+  ) {
+    return this.tagsService.findArticlesByTagSlug(slug, false, query);
   }
 
   @Get('by-slug/:slug/articles/public')
   @ApiOkResponse({ type: ArticleEntity, isArray: true })
-  findPublicArticlesByTagSlug(@Param('slug') slug: string) {
-    return this.tagsService.findArticlesByTagSlug(slug, true);
+  findPublicArticlesByTagSlug(
+    @Param('slug') slug: string,
+    @Query() query: QueryTagsDto,
+  ) {
+    return this.tagsService.findArticlesByTagSlug(slug, true, query);
   }
 }

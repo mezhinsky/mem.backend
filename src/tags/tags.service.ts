@@ -116,13 +116,19 @@ export class TagsService {
     });
   }
 
-  async findArticlesByTagSlug(slug: string, publishedOnly = false) {
+  async findArticlesByTagSlug(
+    slug: string,
+    publishedOnly = false,
+    query: QueryTagsDto = { page: 1, limit: 10 },
+  ) {
     const tag = await this.prisma.tag.findUnique({
       where: { slug },
     });
     if (!tag) {
       throw new NotFoundException(`Тег со slug="${slug}" не найден`);
     }
+
+    const { page = 1, limit = 10, cursorId } = query;
 
     const where: Prisma.ArticleWhereInput = {
       tags: { some: { slug } },
@@ -132,30 +138,61 @@ export class TagsService {
       where.published = true;
     }
 
-    return this.prisma.article.findMany({
-      where,
-      include: {
-        thumbnailAsset: {
-          select: {
-            id: true,
-            url: true,
-            originalName: true,
-            mimeType: true,
-            metadata: true,
-          },
+    const take = limit;
+    let skip: number | undefined;
+    let cursor: Prisma.ArticleWhereUniqueInput | undefined;
+
+    if (cursorId) {
+      cursor = { id: cursorId };
+      skip = 1;
+    } else {
+      skip = (page - 1) * limit;
+    }
+
+    const articleInclude = {
+      thumbnailAsset: {
+        select: {
+          id: true,
+          url: true,
+          originalName: true,
+          mimeType: true,
+          metadata: true,
         },
-        ogImageAsset: {
-          select: {
-            id: true,
-            url: true,
-            originalName: true,
-            mimeType: true,
-            metadata: true,
-          },
-        },
-        tags: true,
       },
-      orderBy: { createdAt: 'desc' },
-    });
+      ogImageAsset: {
+        select: {
+          id: true,
+          url: true,
+          originalName: true,
+          mimeType: true,
+          metadata: true,
+        },
+      },
+      tags: true,
+    };
+
+    const [items, total] = await Promise.all([
+      this.prisma.article.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take,
+        skip,
+        ...(cursor ? { cursor } : {}),
+        include: articleInclude,
+      }),
+      this.prisma.article.count({ where }),
+    ]);
+
+    const lastItem = items[items.length - 1];
+    const nextCursor = items.length === limit ? lastItem?.id : null;
+
+    return {
+      items,
+      total,
+      limit,
+      page: cursorId ? undefined : page,
+      totalPages: cursorId ? undefined : Math.ceil(total / limit),
+      nextCursor,
+    };
   }
 }
