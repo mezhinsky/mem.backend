@@ -24,6 +24,7 @@ import { AssetsService } from './assets.service';
 import { AssetEntity } from './entities/asset.entity';
 import { QueryAssetsDto } from './dto/query-assets.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
+import { BulkMoveAssetsDto } from './dto/bulk-move-assets.dto';
 import { GatewayAuthGuard, RolesGuard } from '../common/guards';
 import { Roles } from '../common/decorators';
 
@@ -58,6 +59,16 @@ export class AssetsController {
       throw new BadRequestException('Файл не передан');
     }
     return this.assetsService.createImage(file);
+  }
+
+  @Post('bulk-move')
+  @UseGuards(GatewayAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOkResponse({ description: 'Number of moved assets', schema: { type: 'object', properties: { count: { type: 'number' } } } })
+  @ApiForbiddenResponse({ description: 'Access denied - Admin role required' })
+  bulkMove(@Body() dto: BulkMoveAssetsDto) {
+    return this.assetsService.bulkMove(dto);
   }
 
   @Get()

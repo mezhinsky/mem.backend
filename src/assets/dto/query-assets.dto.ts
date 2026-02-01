@@ -1,5 +1,5 @@
-import { IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsIn, IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 
 export class QueryAssetsDto {
   @IsOptional()
@@ -31,4 +31,9 @@ export class QueryAssetsDto {
   @IsOptional()
   @IsString()
   cursorId?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => (value === 'null' ? null : value))
+  @IsUUID(undefined, { message: 'folderId must be a valid UUID or "null"' })
+  folderId?: string | null;
 }

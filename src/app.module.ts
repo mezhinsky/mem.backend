@@ -7,6 +7,7 @@ import { ArticlesModule } from './articles/articles.module';
 import { UploadModule } from './upload/upload.module';
 import { AssetsModule } from './assets/assets.module';
 import { TagsModule } from './tags/tags.module';
+import { FoldersModule } from './folders/folders.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TagsModule } from './tags/tags.module';
     TagsModule,
     UploadModule,
     AssetsModule,
+    FoldersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -9,6 +9,7 @@ import sharp from 'sharp';
 import { randomUUID } from 'crypto';
 import { QueryAssetsDto } from './dto/query-assets.dto';
 import { UpdateAssetDto } from './dto/update-asset.dto';
+import { BulkMoveAssetsDto } from './dto/bulk-move-assets.dto';
 
 @Injectable()
 export class AssetsService {
@@ -159,9 +160,15 @@ export class AssetsService {
   }
 
   async findAll(query: QueryAssetsDto) {
-    const { page, limit, sortBy, order, search, cursorId } = query;
+    const { page, limit, sortBy, order, search, cursorId, folderId } = query;
 
     const where: any = {};
+
+    // Filter by folder - only apply if folderId is explicitly provided
+    if (folderId !== undefined) {
+      where.folderId = folderId;
+    }
+
     if (search) {
       where.OR = [
         { originalName: { contains: search, mode: 'insensitive' } },
@@ -226,11 +233,57 @@ export class AssetsService {
     const data: any = {};
     if (dto.originalName !== undefined) data.originalName = dto.originalName;
     if (dto.metadata !== undefined) data.metadata = dto.metadata;
+    if (dto.folderId !== undefined) {
+      // Validate folder exists if not null
+      if (dto.folderId !== null) {
+        const folder = await this.prisma.folder.findUnique({
+          where: { id: dto.folderId },
+        });
+        if (!folder) {
+          throw new NotFoundException(`Folder с id=${dto.folderId} не найден`);
+        }
+      }
+      data.folderId = dto.folderId;
+    }
 
     return this.prisma.asset.update({
       where: { id },
       data,
     });
+  }
+
+  async bulkMove(dto: BulkMoveAssetsDto) {
+    const { assetIds, folderId } = dto;
+
+    // Validate folder exists if provided
+    if (folderId !== null && folderId !== undefined) {
+      const folder = await this.prisma.folder.findUnique({
+        where: { id: folderId },
+      });
+      if (!folder) {
+        throw new NotFoundException(`Folder с id=${folderId} не найден`);
+      }
+    }
+
+    // Validate all assets exist
+    const assets = await this.prisma.asset.findMany({
+      where: { id: { in: assetIds } },
+      select: { id: true },
+    });
+
+    if (assets.length !== assetIds.length) {
+      const foundIds = new Set(assets.map((a) => a.id));
+      const missingIds = assetIds.filter((id) => !foundIds.has(id));
+      throw new NotFoundException(`Assets not found: ${missingIds.join(', ')}`);
+    }
+
+    // Update all assets
+    await this.prisma.asset.updateMany({
+      where: { id: { in: assetIds } },
+      data: { folderId: folderId ?? null },
+    });
+
+    return { count: assetIds.length };
   }
 
   async remove(id: string) {

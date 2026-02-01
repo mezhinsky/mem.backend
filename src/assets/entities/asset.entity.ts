@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Asset, AssetType } from 'generated/prisma';
 
 export class AssetEntity implements Asset {
@@ -28,6 +28,9 @@ export class AssetEntity implements Asset {
 
   @ApiProperty({ required: false, nullable: true })
   metadata: any;
+
+  @ApiPropertyOptional({ nullable: true })
+  folderId: string | null;
 
   @ApiProperty()
   createdAt: Date;
